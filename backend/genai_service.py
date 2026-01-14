@@ -2,6 +2,8 @@ import os
 import json
 import google.generativeai as genai
 from dotenv import load_dotenv
+from retrieval import retrieve_relevant_benefits
+
 
 # Load environment variables
 load_dotenv()
@@ -14,34 +16,36 @@ model = genai.GenerativeModel("gemini-1.5-flash")
 
 
 def generate_ai_response(benefits, user_context, language="English"):
+
+    # 🔹 RAG RETRIEVAL STEP
+    retrieved_benefits = retrieve_relevant_benefits(benefits, user_context)
+
     prompt = f"""
 You are an intelligent banking assistant.
+
+IMPORTANT RULE:
+- Use ONLY the benefits provided below.
+- Do NOT assume or add information outside this data.
 
 User Context:
 - User type: {user_context.get("user_type")}
 - Location: {user_context.get("location")}
-- Preferred Language: {language}
+- Language: {language}
 
 Tasks:
-1. Summarize the banking benefits in simple language.
-2. Recommend the single most useful benefit for this user.
+1. Summarize the benefits in simple language.
+2. Recommend the single most useful benefit.
 3. Explain why it is useful.
 4. Respond in {language}.
 
-Banking Benefits Data:
-{json.dumps(benefits[:5], indent=2)}
+Retrieved Benefits (Ground Truth):
+{retrieved_benefits}
 """
-
-    try:
-        response = model.generate_content(prompt)
-        return {
-            "ai_response": response.text,
-            "language": language
-        }
-
-    except Exception as e:
-        # Fallback (VERY IMPORTANT for demos)
-        return {
-            "ai_response": "AI service is temporarily unavailable. Please try again later.",
-            "error": str(e)
-        }
+    response = model.generate_content(prompt)
+    
+    return {
+        "ai_response": response.text,
+        "user_context": user_context,
+        "language": language,
+        "retrieved_benefits": retrieved_benefits
+    }

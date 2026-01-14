@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from data_loader import load_benefits, load_features, load_terms
+from genai_service import generate_ai_response
 
 app = FastAPI(
     title="Intelligent Card Benefits AI Backend",
