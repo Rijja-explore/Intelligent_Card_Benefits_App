@@ -15,7 +15,7 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 # Configure Gemini only if API key is available
 if GEMINI_API_KEY and GEMINI_API_KEY != "your_gemini_api_key_here" and not USE_MOCK:
     genai.configure(api_key=GEMINI_API_KEY)
-    model = genai.GenerativeModel("gemini-1.5-flash")
+    model = genai.GenerativeModel("gemini-2.5-flash")
 else:
     model = None
     print("⚠️  Using mock AI responses (no valid GEMINI_API_KEY found)")
