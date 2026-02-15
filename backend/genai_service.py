@@ -117,9 +117,17 @@
 
 import os
 import json
-import google.generativeai as genai
 from dotenv import load_dotenv
 from retrieval import retrieve_relevant_benefits
+
+# Try importing the optional Google Generative AI package. If it's not
+# available, fall back to using mock responses so the backend can run.
+try:
+    import google.generativeai as genai
+    GENAI_AVAILABLE = True
+except Exception:
+    genai = None
+    GENAI_AVAILABLE = False
 
 
 # Load environment variables
@@ -129,13 +137,17 @@ load_dotenv()
 USE_MOCK = os.getenv("USE_MOCK_RESPONSES", "false").lower() == "true"
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-# Configure Gemini only if API key is available
-if GEMINI_API_KEY and GEMINI_API_KEY != "your_gemini_api_key_here" and not USE_MOCK:
-    genai.configure(api_key=GEMINI_API_KEY)
-    model = genai.GenerativeModel("gemini-2.5-flash")
+# Configure Gemini only if the package is available and an API key is provided
+if GENAI_AVAILABLE and GEMINI_API_KEY and GEMINI_API_KEY != "your_gemini_api_key_here" and not USE_MOCK:
+    try:
+        genai.configure(api_key=GEMINI_API_KEY)
+        model = genai.GenerativeModel("gemini-2.5-flash")
+    except Exception as e:
+        print(f"⚠️  Failed to initialize generative model: {e}")
+        model = None
 else:
     model = None
-    print("⚠️  Using mock AI responses (no valid GEMINI_API_KEY found)")
+    print("⚠️  Using mock AI responses (no valid GEMINI_API_KEY found or package unavailable)")
 
 
 def generate_ai_response(benefits, user_context, language="English"):
